@@ -15,6 +15,8 @@ scalacOptions ++= Seq("-deprecation", "-feature")
 
 resolvers += "Spray Repository" at "http://repo.spray.io"
 
+resolvers += "OSSH" at "https://oss.sonatype.org/content/groups/public"
+
 libraryDependencies += "net.databinder" %% "dispatch-http" % "0.8.10"
 
 libraryDependencies += "org.scalastyle" %% "scalastyle" % "0.3.2"
