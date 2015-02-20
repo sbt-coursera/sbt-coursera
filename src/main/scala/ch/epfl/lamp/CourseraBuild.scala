@@ -123,7 +123,7 @@ trait CourseraBuild extends sbt.Build {
   val grade = TaskKey[Unit]("grade")
 
   // mapR: submit the grade / feedback in any case, also on failure
-  lazy val gradeSetting = grade <<= (getSubmission, gradingUUID, scalaTestSubmission, styleCheckSubmission, apiKey, gradeProjectDetails, streams) mapR { (_, uuidR, sts, scs, apiKeyR, projectDetailsR, s) =>
+  lazy val gradeSetting = grade <<= (gradingUUID, scalaTestSubmission, styleCheckSubmission, apiKey, gradeProjectDetails, streams) mapR { (uuidR, sts, scs, apiKeyR, projectDetailsR, s) =>
     val Value(uuid) = uuidR
     val logOpt = s match {
       case Value(v) => Some(v.log)
