@@ -101,8 +101,7 @@ object ScalaTestRunner {
     // we don't specify "-w packageToTest" - the build file only compiles the tests
     // for the current project. so we don't need to do it again here.
     val cmd = ("java" :: agentsStr.map(agent => s"-javaagent:${agent}")) ++ (
-      "-Djava.security.manager" ::
-      prop("java.security.policy", policyFileStr) ::
+      // "-Djava.security.manager" :: prop("java.security.policy", policyFileStr) ::
       prop(Settings.scalaTestReportFileProperty, outfileStr) ::
       prop(Settings.scalaTestIndividualTestTimeoutProperty, Settings.individualTestTimeout.toString) ::
       prop(Settings.scalaTestReadableFilesProperty, resourceFilesString) ::
