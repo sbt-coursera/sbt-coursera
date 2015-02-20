@@ -132,12 +132,7 @@ trait CourseraBuild extends sbt.Build {
     logOpt.foreach(_.info(GradingFeedback.feedbackString(uuid, html = false)))
     val Value(projectDetails) = projectDetailsR
     apiKeyR match {
-      case Value(originalApiKey) if (!originalApiKey.isEmpty) =>
-        val apiKey = projectDetails.courseId match { // OMG what a hack!!!
-          case "progfun-005" => "jqw9WQi3MgvmOJsK"
-          case "reactive-001" => "Pwnc6dEcYBBAuCSP2mof-react"
-          case "progfun2-002" => "iqw9WQi3MgvmOJsK"
-        }
+      case Value(apiKey) if (!apiKey.isEmpty) =>
         logOpt.foreach(_.debug("Course Id for submission: " + projectDetails.courseId))
         logOpt.foreach(_.debug("Corresponding API key: " + apiKey))
         // if build failed early, we did not even get the api key from the submission queue
