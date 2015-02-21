@@ -292,18 +292,18 @@ object SbtCourseraPlugin extends AutoPlugin {
      */
 
     val initGrading = TaskKey[Unit]("initGrading")
-    lazy val initGradingSetting = initGrading <<= (clean, sourceDirectory, baseDirectory) map { (_, submissionSrcDir, basedir) =>
-      deleteFiles(submissionSrcDir, basedir)
+    lazy val initGradingSetting = initGrading <<= (clean, baseDirectory, sourceDirectory) map { (_, baseDir, submissionSrcDir) =>
+      deleteFiles(submissionSrcDir, baseDir)
       GradingFeedback.initialize()
       RecordingLogger.clear()
     }
 
-    def deleteFiles(submissionSrcDir: File, basedir: File) {
+    def deleteFiles(submissionSrcDir: File, baseDir: File) {
       // don't delete anything in offline mode, useful for us when hacking testing / stylechecking
       if (!Settings.offlineMode) {
         IO.delete(submissionSrcDir)
-        IO.delete(basedir / Settings.submissionJarFileName)
-        IO.delete(basedir / Settings.testResultsFileName)
+        IO.delete(baseDir / Settings.submissionJarFileName)
+        IO.delete(baseDir / Settings.testResultsFileName)
       }
     }
 
@@ -313,7 +313,7 @@ object SbtCourseraPlugin extends AutoPlugin {
      */
 
     val getSubmission = TaskKey[Unit]("getSubmission")
-    val getSubmissionSetting = getSubmission <<= (baseDirectory, scalaSource in Compile) map { (baseDir, scalaSrcDir) =>
+    val getSubmissionSetting = getSubmission <<= (initGrading, baseDirectory, scalaSource in Compile) map { (_, baseDir, scalaSrcDir) =>
       readAndUnpackSubmission(baseDir, scalaSrcDir)
     }
 

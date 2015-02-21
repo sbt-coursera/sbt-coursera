@@ -91,7 +91,7 @@ trait CourseraBuild extends sbt.Build {
   val gradeProjectDetails = TaskKey[ProjectDetails]("gradeProjectDetails")
 
   // here we depend on `initialize` because we already use the GradingFeedback
-  lazy val gradeProjectDetailsSetting = gradeProjectDetails <<= (initGrading, gradingCourseId, partIdOfGradingProject, projectDetailsMap in assignmentProject) map { (_, gradingCourseId, partId, detailsMap) =>
+  lazy val gradeProjectDetailsSetting = gradeProjectDetails <<= (gradingCourseId, partIdOfGradingProject, projectDetailsMap in assignmentProject) map { (gradingCourseId, partId, detailsMap) =>
     detailsMap.find(_._2.assignmentPartId == partId) match {
       case Some((_, details)) =>
         details.copy(courseId = gradingCourseId)
