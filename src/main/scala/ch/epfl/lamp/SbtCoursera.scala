@@ -69,14 +69,13 @@ object SbtCourseraPlugin extends AutoPlugin {
     val createHandout = inputKey[File]("createHandout")
 
     // depends on "compile in Test" to make sure everything compiles. also makes sure that
-    // all dependencies are downloaded, because we pack the .jar files into the handout.
     lazy val createHandoutSetting = createHandout := {
       val args = Def.spaceDelimited("<arg>").parsed
       val _ = (compile in Test).value
       if (currentProject.value != "" && currentProject.value != submitProjectName.value)
         sys.error("\nthe 'currentProject' setting in build.sbt needs to be \"\" or equal to submitProjectName in order to create a handout")
       else args match {
-        case handoutProjectName :: eclipseDone :: Nil if eclipseDone == "eclipseWasCalled" =>
+        case handoutProjectName :: Nil =>
           if (handoutProjectName != submitProjectName.value)
             sys.error("\nThe `submitProjectName` setting in `build.sbt` must match the project name for which a handout is generated\n ")
           val filesFinder = handoutFiles.value
@@ -89,7 +88,7 @@ object SbtCourseraPlugin extends AutoPlugin {
             case (file, name) =>
               val contents = if (name.endsWith(".scala")) {
                 val source = IO.read(file)
-                val processedSource = source.replaceAll("""(?s)//\-\-\-.*?/*\+\+\+\s*(.*?)\+\+\+\*/""", "$1")
+                val processedSource = source.replaceAll("""(?s)///\-\-\-.*?\-\-\-///\+\+\+(.*?)\+\+\+///""", "$1")
                 processedSource.getBytes
               } else {
                 IO.readBytes(file)
@@ -107,12 +106,10 @@ object SbtCourseraPlugin extends AutoPlugin {
           val detailsMap = projectDetailsMap.value
           val msg = s"""
             |
-            |Failed to create handout. Syntax: `createHandout <projectName> <eclipseWasCalled>`
+            |Failed to create handout. Syntax: `createHandout <projectName>`
             |
             |Valid project names are: ${detailsMap.keys.mkString(", ")}
             |
-            |The argument <eclipseWasCalled> needs to be the string "eclipseWasCalled". This is to remind
-            |you that you **need** to manually run the `eclipse` command before running `createHandout`.
             | """.stripMargin
           sys.error(msg)
       }
@@ -480,7 +477,7 @@ object SbtCourseraPlugin extends AutoPlugin {
     }
 
     /**
-     * Only include source files of 'currentProject', helpful when preparign a specific assignment.
+     * Only include source files of 'currentProject', helpful when preparing a specific assignment.
      * Also keeps the source packages in 'commonSourcePackages'.
      */
     lazy val selectMainSources = {

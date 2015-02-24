@@ -84,9 +84,6 @@ In `Settings.scala` there's a boolean `offlineMode` which is useful when coding 
 
 In `sbt` in the master branch, do the following (replace NAME_OF_THE_PROJECT with the actual project name):
 
-    > clean
-    > set currentProject := "NAME_OF_THE_PROJECT"
-    > eclipse
-    > createHandout NAME_OF_THE_PROJECT eclipseWasCalled
+    > createHandout NAME_OF_THE_PROJECT
 
 Grab the generated zip file from the `target` folder.
