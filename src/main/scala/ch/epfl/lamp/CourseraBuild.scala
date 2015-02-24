@@ -17,8 +17,6 @@ trait CourseraBuild extends sbt.Build {
     // 'submit' depends on 'packageSrc', so needs to be a project-level setting: on build-level, 'packageSrc' is not defined
     submitSetting,
     createHandoutSetting,
-    // put all libs in the lib_managed directory, that way we can distribute eclipse project files
-    retrieveManaged := true,
     EclipseKeys.relativizeLibs := true,
     // Avoid generating eclipse source entries for the java directories
     (unmanagedSourceDirectories in Compile) <<= (scalaSource in Compile)(Seq(_)),
