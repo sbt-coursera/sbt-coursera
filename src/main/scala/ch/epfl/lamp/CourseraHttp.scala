@@ -156,16 +156,6 @@ object CourseraHttp {
    * ******************************
    * DOWNLOADING SUBMISSIONS
    */
-
-  // def downloadFromQueue(queue: String, targetJar: File, apiKey: String): ValidationNel[String, QueueResult] = {
-  //   val baseReq = url(Settings.submitQueueUrl)
-  //   val withArgsAndHeader = baseReq << Map("queue" -> queue) <:< Map("X-api-key" -> apiKey)
-
-  //   executeRequest(withArgsAndHeader) { res =>
-  //     extractJson(res, targetJar)
-  //   }
-  // }
-
   def readJsonFile(jsonFile: File, targetJar: File): ValidationNel[String, QueueResult] = {
     extractJson(sbt.IO.read(jsonFile), targetJar)
   }

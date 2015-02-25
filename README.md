@@ -2,41 +2,16 @@
 
 [![Join the chat at https://gitter.im/sbt-coursera/sbt-coursera](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/sbt-coursera/sbt-coursera?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) [![Build Status](https://travis-ci.org/sbt-coursera/sbt-coursera.png?branch=master)](https://travis-ci.org/sbt-coursera/sbt-coursera)
 
-### Working on one specific assignment
+This is an SBT plugin for creating Scala and Java projects that can be automatically graded on [Corusera](https://www.coursera.org/). The plugin is meant to be used with the set of [scripts](https://github.com/sbt-coursera/cluster-management) for managing the cluster infrastructure.
 
-When working on one specific assignment, you'd like to avoid the sources and tests of other assignments from being compiled / tested. This can be achieved using the setting `currentProject` in the main `build.sbt` file.
+### Usage
 
-If `currentProject == ""`, then all sources are compiled and all tests are executed.
+To use the `sbt-coursera` plugin you need to do two things: 
+  * Add the `plugins.sbt` file with the following contents to the `<base-dir>/project` folder. The file should contain the following:
+    
+        addSbtPlugin("ch.epfl.lamp" % "sbt-coursera" % "0.1")
 
-
-### Test Weights and Sandboxing
-
-A public test suite (for students) should extend `org.scalatest.FunSuite` and use the "test" method defined there. In order to add test weights and test execution sandboxing, the private test suites mix in the trait `grading.GradingSuite` which is defined in the `solutions` branch. This triat overrides the "test" method to sandbox the executed code and adds an additional `weight` argument allowing to define the grade weight of each test.
-
-The enitre source code for all the assignments is kept in this repository. The sources for each assignment have to be in a separate package (`project1`, ...).
-
-The `createHandout` task (available in `master`) will only include the tests and sources of the specific project for which a handout archive is generated. Similarly, the `submission/grade` task will only compile and execute the tests of the project being tested.
-
-**NOTE**: after adding the `grading.GradingSuite` trait to a test suite (as in the `solutions` branch), it can no longer be executed in eclipse using the eclipse JUint runner.
-
-### Running weighted tests and Scalastyle
-
-When working on an assignment, you can use the sbt task `styleCheck` to run Scalastyle on the source files.
-
-To run the test suite with test weights (only works in branch `solutions`) while working on an assignment, you can use the `scalaTest` task. In order to run the tests without computing a score, use the ordinary `test` task (in both branches).
-
-**NOTE**: all of these tasks tasks take the `currentProject` setting into account, see above.
-
----
-
-# BUILD DEFINITION
-
-Students will never have to touch any build files.
-
-The main `build.sbt` file defines settings for all projects.
-
-The file `submission/settings.sbt` contains settings only needed for grading. **This file contains a secret API key and should not be distributed to the students**.
-
+  * Add your custom build file to the `<base-dir>/project` by filling in the [template file](TODO).
 
 ### ProjectDetailsMap
 
@@ -45,7 +20,7 @@ The build can be reused for different project handouts, it abstracts over all pr
 The elements in the `projectDetailsMap` are mostly self-explanatory. The `packageName` field
 is used in two places during the build process
 
-  - To select the source files that are handed out to students, see `handoutFiles` in `build.sbt`
+  - To select the source files that are handed out to students, see the `handoutFiles` in your scala build file that extends.
   - To select which tests are compiled and executed when testing a submission, see `selectTestsForProject` in `ProgFunBuild.scala` and `runScalaTest` in `ScalaTestRunner.scala`
 
 ### Main Project
@@ -78,15 +53,46 @@ In `Settings.scala` there's a boolean `offlineMode` which is useful when coding 
 - not clean the sources in the `submission` project
 - not upload feedback
 
-# COOKBOOK
 
 ### Creating handouts
 
 In `sbt` in the master branch, do the following (replace NAME_OF_THE_PROJECT with the actual project name):
 
-    > clean
-    > set currentProject := "NAME_OF_THE_PROJECT"
-    > eclipse
-    > createHandout NAME_OF_THE_PROJECT eclipseWasCalled
+    > createHandout NAME_OF_THE_PROJECT
 
-Grab the generated zip file from the `target` folder.
+Grab the generated zip file from the `target` folder.        
+
+### Working on one specific assignment
+
+When working on one specific assignment, you'd like to avoid the sources and tests of other assignments from being compiled / tested. This can be achieved using the setting `currentProject` in the main `build.sbt` file.
+
+If `currentProject == ""`, then all sources are compiled and all tests are executed.
+
+### Test Weights and Sandboxing
+
+A public test suite (for students) should extend `org.scalatest.FunSuite` and use the "test" method defined there. In order to add test weights and test execution sandboxing, the private test suites mix in the trait `grading.GradingSuite` which is defined in the `solutions` branch. This triat overrides the "test" method to sandbox the executed code and adds an additional `weight` argument allowing to define the grade weight of each test.
+
+The entire source code for all the assignments is kept in this repository. The sources for each assignment have to be in a separate package (`project1`, ...).
+
+The `createHandout` task (available in `master`) will only include the tests and sources of the specific project for which a handout archive is generated. Similarly, the `submission/grade` task will only compile and execute the tests of the project being tested.
+
+**NOTE**: after adding the `grading.GradingSuite` trait to a test suite (as in the `solutions` branch), it can no longer be executed in eclipse using the eclipse JUint runner.
+
+### Running weighted tests and Scalastyle
+
+When working on an assignment, you can use the `sbt` task `styleCheck` to run Scalastyle on the source files.
+
+To run the test suite with test weights (only works in branch `solutions`) while working on an assignment, you can use the `scalaTest` task. In order to run the tests without computing a score, use the ordinary `test` task (in both branches).
+
+**NOTE**: all of these tasks tasks take the `currentProject` setting into account, see above.
+
+---
+
+# BUILD DEFINITION
+
+Students will never have to touch any build files.
+
+The main `build.sbt` file defines settings for all projects.
+
+The file `submission/settings.sbt` contains settings only needed for grading. **This file contains a secret API key and should not be distributed to the students**.
+

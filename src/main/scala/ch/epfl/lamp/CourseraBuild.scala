@@ -17,8 +17,6 @@ trait CourseraBuild extends sbt.Build {
     // 'submit' depends on 'packageSrc', so needs to be a project-level setting: on build-level, 'packageSrc' is not defined
     submitSetting,
     createHandoutSetting,
-    // put all libs in the lib_managed directory, that way we can distribute eclipse project files
-    retrieveManaged := true,
     EclipseKeys.relativizeLibs := true,
     // Avoid generating eclipse source entries for the java directories
     (unmanagedSourceDirectories in Compile) <<= (scalaSource in Compile)(Seq(_)),
@@ -91,7 +89,7 @@ trait CourseraBuild extends sbt.Build {
   val gradeProjectDetails = TaskKey[ProjectDetails]("gradeProjectDetails")
 
   // here we depend on `initialize` because we already use the GradingFeedback
-  lazy val gradeProjectDetailsSetting = gradeProjectDetails <<= (initGrading, gradingCourseId, partIdOfGradingProject, projectDetailsMap in assignmentProject) map { (_, gradingCourseId, partId, detailsMap) =>
+  lazy val gradeProjectDetailsSetting = gradeProjectDetails <<= (gradingCourseId, partIdOfGradingProject, projectDetailsMap in assignmentProject) map { (gradingCourseId, partId, detailsMap) =>
     detailsMap.find(_._2.assignmentPartId == partId) match {
       case Some((_, details)) =>
         details.copy(courseId = gradingCourseId)
