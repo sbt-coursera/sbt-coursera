@@ -88,7 +88,7 @@ object SbtCourseraPlugin extends AutoPlugin {
             case (file, name) =>
               val contents = if (name.endsWith(".scala")) {
                 val source = IO.read(file)
-                val processedSource = source.replaceAll("""(?s)///\-\-\-.*?\-\-\-///\+\+\+(.*?)\+\+\+///""", "$1")
+                val processedSource = source.replaceAll("""(?s)//\-\-\-.*?/*\+\+\+[\t\x0B\f\r]*[\n]?(.*?)\+\+\+\*/[\t\x0B\f\r]*[\n]?""", "$1")
                 processedSource.getBytes
               } else {
                 IO.readBytes(file)
