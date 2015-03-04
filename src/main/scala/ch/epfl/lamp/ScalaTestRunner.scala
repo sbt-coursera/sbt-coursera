@@ -80,7 +80,11 @@ object ScalaTestRunner {
     }
   }
 
-  def runScalaTest(classpath: Classpath, testClasses: File, outfile: File, policyFile: File, resourceFiles: List[File], agents: List[File], logError: String => Unit) = {
+  def runScalaTest(classpath: Classpath, testClasses: File, outfile: File,
+    policyFile: File, resourceFiles: List[File], agents: List[File],
+    javaSystemProperties: Traversable[(String, String)],
+    logError: String => Unit) = {
+
     val classpathString = classpath map {
       case Attributed(file) => file.getAbsolutePath()
     } mkString (":")
@@ -106,10 +110,11 @@ object ScalaTestRunner {
       prop(Settings.scalaTestIndividualTestTimeoutProperty, Settings.individualTestTimeout.toString) ::
       prop(Settings.scalaTestReadableFilesProperty, resourceFilesString) ::
       prop(Settings.scalaTestDefaultWeigthProperty, Settings.scalaTestDefaultWeigth.toString) ::
+      javaSystemProperties.map((prop _).tupled).toList :::
       "-cp" :: classpathString ::
       "org.scalatest.tools.Runner" ::
       "-R" :: testRunpath ::
-      "-C" :: "grading.CourseraReporter" ::
+      "-C" :: "ch.epfl.lamp.grading.GradingReporter" ::
       Nil)
 
     // process deadlocks in Runner.PassFailReporter.allTestsPassed on runDoneSemaphore.acquire() when
@@ -148,8 +153,15 @@ object ScalaTestRunner {
     (score, maxScore, feedback, runLog)
   }
 
-  def scalaTestGrade(classpath: Classpath, testClasses: File, outfile: File, policyFile: File, resourceFiles: List[File], agents: List[File]) {
-    val (score, maxScore, feedback, runLog) = runScalaTest(classpath, testClasses, outfile, policyFile, resourceFiles, agents, GradingFeedback.testExecutionFailed)
+  def scalaTestGrade(classpath: Classpath, testClasses: File, outfile: File,
+    policyFile: File, resourceFiles: List[File], agents: List[File],
+    javaSystemProperties: Traversable[(String, String)]) {
+
+    val (score, maxScore, feedback, runLog) =
+      runScalaTest(classpath, testClasses, outfile, policyFile,
+        resourceFiles, agents, javaSystemProperties,
+        GradingFeedback.testExecutionFailed)
+
     if (score == maxScore) {
       GradingFeedback.allTestsPassed()
     } else {

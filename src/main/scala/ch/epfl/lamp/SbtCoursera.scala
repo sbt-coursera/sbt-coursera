@@ -51,6 +51,12 @@ object SbtCourseraPlugin extends AutoPlugin {
     /** Package names of test sources for grading, see comment in build.sbt */
     val gradingTestPackages = SettingKey[Seq[String]]("gradingTestPackages")
 
+    /** Jars for Java agents to be used when running ScalaTest. */
+    val scalaTestJavaAgents = TaskKey[Seq[File]]("scalaTestJavaAgents")
+
+    /** Additional Java system properties to be used when running ScalaTest. */
+    val scalaTestJavaSysProps = TaskKey[Seq[(String, String)]]("scalaTestJavaSysProps")
+
     /**
      * **********************************************************
      * SUBMITTING A SOLUTION TO COURSERA
@@ -121,18 +127,21 @@ object SbtCourseraPlugin extends AutoPlugin {
      */
 
     val scalaTestSubmission = TaskKey[Unit]("scalaTestSubmission")
-    val scalaTestSubmissionSetting = scalaTestSubmission <<=
-      (compile in Compile,
-        compile in Test,
-        fullClasspath in Test,
-        copyResources in Compile,
-        classDirectory in Test,
-        baseDirectory) map { (_, _, classpath, resources, testClasses, basedir) =>
-          // we use `map`, so this is only executed if all dependencies succeed. no need to check `GradingFeedback.isFailed`
-          val outfile = basedir / Settings.testResultsFileName
-          val policyFile = basedir / ".." / Settings.policyFileName
-          ScalaTestRunner.scalaTestGrade(classpath, testClasses, outfile, policyFile, copiedResourceFiles(resources), Nil)
-        }
+    val scalaTestSubmissionSetting = scalaTestSubmission := {
+      val classpath = (fullClasspath in Test).value
+      val resources = (copyResources in Compile).value
+      val testClasses = (classDirectory in Test).value
+      val agents = (scalaTestJavaAgents in Test).value
+      val javaSysProps = (scalaTestJavaSysProps in Test).value
+      val basedir = baseDirectory.value
+
+      // this is only executed if all dependencies succeed.
+      // no need to check `GradingFeedback.isFailed`
+      val outfile = basedir / Settings.testResultsFileName
+      val policyFile = basedir / ".." / Settings.policyFileName
+      ScalaTestRunner.scalaTestGrade(classpath, testClasses, outfile,
+        policyFile, copiedResourceFiles(resources), agents.toList, javaSysProps)
+    }
 
     /**
      * **********************************************************
@@ -213,27 +222,31 @@ object SbtCourseraPlugin extends AutoPlugin {
     }
 
     val scalaTest = TaskKey[Unit]("scalaTest")
-    val scalaTestSetting = scalaTest <<=
-      (compile in Compile,
-        compile in Test,
-        fullClasspath in Test,
-        copyResources in Compile,
-        classDirectory in Test,
-        baseDirectory,
-        streams) map { (_, _, classpath, resources, testClasses, basedir, s) =>
-          // we use `map`, so this is only executed if all dependencies succeed. no need to check `GradingFeedback.isFailed`
-          val logger = s.log
-          val outfile = basedir / Settings.testResultsFileName
-          val policyFile = basedir / Settings.policyFileName
-          val (score, maxScore, feedback, runLog) =
-            ScalaTestRunner.runScalaTest(classpath, testClasses, outfile, policyFile, copiedResourceFiles(resources), Nil, logger.error(_))
-          logger.info(feedback)
-          logger.info("Test Score: " + score + " out of " + maxScore)
-          if (!runLog.isEmpty) {
-            logger.info("Console output of ScalaTest process")
-            logger.info(runLog)
-          }
-        }
+    val scalaTestSetting = scalaTest := {
+      val classpath = (fullClasspath in Test).value
+      val resources = (copyResources in Compile).value
+      val testClasses = (classDirectory in Test).value
+      val agents = (scalaTestJavaAgents in Test).value
+      val javaSysProps = (scalaTestJavaSysProps in Test).value
+      val basedir = baseDirectory.value
+      val s = streams.value
+
+      // this is only executed if all dependencies succeed.
+      // no need to check `GradingFeedback.isFailed`
+      val logger = s.log
+      val outfile = basedir / Settings.testResultsFileName
+      val policyFile = basedir / Settings.policyFileName
+      val (score, maxScore, feedback, runLog) =
+        ScalaTestRunner.runScalaTest(classpath, testClasses, outfile,
+          policyFile, copiedResourceFiles(resources), agents.toList,
+          javaSysProps, logger.error(_))
+      logger.info(feedback)
+      logger.info("Test Score: " + score + " out of " + maxScore)
+      if (!runLog.isEmpty) {
+        logger.info("Console output of ScalaTest process")
+        logger.info(runLog)
+      }
+    }
 
     val styleCheck = TaskKey[Unit]("styleCheck")
 
