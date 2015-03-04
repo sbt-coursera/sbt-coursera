@@ -9,7 +9,7 @@ This is an SBT plugin for creating Scala and Java projects that can be automatic
 To use the `sbt-coursera` plugin you need to do two things: 
   * Add the `plugins.sbt` file with the following contents to the `<base-dir>/project` folder. The file should contain the following:
     
-        addSbtPlugin("ch.epfl.lamp" % "sbt-coursera" % "0.2")
+        addSbtPlugin("ch.epfl.lamp" % "sbt-coursera" % "0.3")
 
   * Add your custom build file to the `<base-dir>/project` by filling in the [template file](TODO).
 
