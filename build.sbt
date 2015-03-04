@@ -35,13 +35,13 @@ addSbtPlugin("com.typesafe.sbteclipse" % "sbteclipse-plugin" % "3.0.0")
 
 licenses := Seq("New BSD" -> url("https://raw2.github.com/vjovanov/sbt-coursera/master/LICENSE"))
 
-homepage := Some(url("https://github.com/vjovanov/sbt-coursera/"))
+homepage := Some(url("https://github.com/sbt-coursera/sbt-coursera/"))
 
 organizationHomepage := Some(url("http://lamp.epfl.ch"))
 
 scmInfo := Some(ScmInfo(
-  url("https://github.com/scala-records/scala-records.git"),
-      "git://github.com/scala-records/scala-records.git"))
+  url("https://github.com/sbt-coursera/sbt-coursera.git"),
+      "git://github.com/sbt-coursera/sbt-coursera.git"))
 
 pomExtra := (
   <developers>
