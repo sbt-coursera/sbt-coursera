@@ -23,6 +23,8 @@ trait CourseraBuild extends sbt.Build {
     (unmanagedSourceDirectories in Test) <<= (scalaSource in Test)(Seq(_)),
     commonSourcePackages := Seq(), // see build.sbt
     gradingTestPackages := Seq(), // see build.sbt
+    scalaTestJavaAgents := Seq(),
+    scalaTestJavaSysProps := Seq(),
     selectMainSources,
     selectTestSources,
     scalaTestSetting,
@@ -41,6 +43,8 @@ trait CourseraBuild extends sbt.Build {
     scalacOptions <<= (scalacOptions in assignmentProject),
     libraryDependencies <<= (libraryDependencies in assignmentProject),
     unmanagedBase <<= (unmanagedBase in assignmentProject),
+    scalaTestJavaAgents in Test <<= (scalaTestJavaAgents in (assignmentProject, Test)),
+    scalaTestJavaSysProps in Test <<= (scalaTestJavaSysProps in (assignmentProject, Test)),
 
     /** settings specific to the grading project */
     initGradingSetting,
