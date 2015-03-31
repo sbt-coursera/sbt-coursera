@@ -32,7 +32,8 @@ trait CourseraBuild extends sbt.Build {
     setTestPropertiesSetting,
     setTestPropertiesHook,
     name <<= submitProjectName(pname => pname),
-    allProjectsSetting
+    allProjectsSetting,
+    javaOptions ++= testProperties.map { case (name, value) => s"-D$name=$value" }
   ) settings ((packageSubmissionFiles ++ dependencies ++ assignmentSettings): _*)
 
   lazy val submissionProject = Project(id = "submission", base = file(Settings.submissionDirName)) settings (

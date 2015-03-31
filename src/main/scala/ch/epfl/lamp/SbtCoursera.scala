@@ -203,9 +203,15 @@ object SbtCourseraPlugin extends AutoPlugin {
     val setTestProperties = TaskKey[Unit]("setTestProperties")
     val setTestPropertiesSetting = setTestProperties := {
       import scala.util.Properties._
+      testProperties.foreach(prop => setProp(prop._1, prop._2))
+    }
+
+    def testProperties: Seq[(String, String)] = {
       import Settings._
-      setProp(scalaTestIndividualTestTimeoutProperty, individualTestTimeout.toString)
-      setProp(scalaTestDefaultWeigthProperty, scalaTestDefaultWeigth.toString)
+      Seq(
+        (scalaTestIndividualTestTimeoutProperty, individualTestTimeout.toString),
+        (scalaTestDefaultWeigthProperty, scalaTestDefaultWeigth.toString)
+      )
     }
 
     val setTestPropertiesHook = (test in Test) <<= (test in Test).dependsOn(setTestProperties)
