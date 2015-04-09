@@ -31,6 +31,8 @@ libraryDependencies += "org.apache.commons" % "commons-lang3" % "3.1"
 // sbteclipse depends on scalaz 7.0.2, so we can't use 7.1.0
 libraryDependencies += "org.scalaz" %% "scalaz-core" % "7.0.2"
 
+libraryDependencies += "org.scala-lang.modules" %% "scala-pickling" % "0.10.0"
+
 addSbtPlugin("com.typesafe.sbteclipse" % "sbteclipse-plugin" % "3.0.0")
 
 licenses := Seq("New BSD" -> url("https://raw2.github.com/vjovanov/sbt-coursera/master/LICENSE"))
