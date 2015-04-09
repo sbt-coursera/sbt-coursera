@@ -7,8 +7,8 @@ import scala.pickling.Defaults._
 import scala.pickling.json._
 
 /**
- * Test report produced by the scala-grading consists of a json-serialized
- *  list of entries delimited by new lines. Each entry corresponds to a scalatest event.
+ *  Test report produced by the scala-grading consists of a json-serialized
+ *  list of entries delimited by new lines.
  *
  *  For example for a test suite "Suite1" with tests "a" (weight 1) and
  *  "b" (weight 2) where second test failed and first one succeed one would
@@ -24,10 +24,8 @@ import scala.pickling.json._
  *    )
  *
  *  Due to matching start/end entries it's easy and report if test crashed midway.
- *
- *  Pending tests are considered to be successful, ignored tests are not recorded.
  */
-object TestReport {
+object ScalaTestReport {
   final case class Start(totalWeight: Int) extends Entry
   final case class End() extends Entry
   final case class TestStart(testName: String, testWeight: Int) extends Entry
