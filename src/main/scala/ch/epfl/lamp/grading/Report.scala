@@ -1,4 +1,4 @@
-package ch.epfl.lamp
+package ch.epfl.lamp.grading
 
 import java.io.{ File, PrintWriter }
 import scala.Predef.{ any2stringadd => _, _ }
@@ -25,7 +25,7 @@ import scala.pickling.json._
  *
  *  Due to matching start/end entries it's easy and report if test crashed midway.
  */
-object ScalaTestReport {
+object Report {
   final case class Start(totalWeight: Int) extends Entry
   final case class End() extends Entry
   final case class TestStart(testName: String, testWeight: Int) extends Entry
@@ -48,8 +48,10 @@ object ScalaTestReport {
     var failed = List.empty[TestFailure]
     entries.foreach {
       case Start(weight) =>
+        assert(totalWeight == 0)
         totalWeight = weight
       case End() =>
+        assert(!complete)
         complete = true
       case e @ TestStart(name, _) =>
         started += name -> e

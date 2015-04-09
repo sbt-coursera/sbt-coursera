@@ -114,7 +114,7 @@ object ScalaTestRunner {
       "-cp" :: classpathString ::
       "org.scalatest.tools.Runner" ::
       "-R" :: testRunpath ::
-      "-C" :: "ch.epfl.lamp.grading.GradingReporter" ::
+      "-C" :: Settings.scalaTestReporter ::
       Nil)
 
     // process deadlocks in Runner.PassFailReporter.allTestsPassed on runDoneSemaphore.acquire() when

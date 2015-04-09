@@ -41,6 +41,7 @@ object Settings {
   val scalaTestIndividualTestTimeoutProperty = "scalatest.individualTestTimeout"
   val scalaTestReadableFilesProperty = "scalatest.readableFiles"
   val scalaTestDefaultWeigthProperty = "scalatest.defaultWeight"
+  val scalaTestReporter = "ch.epfl.lamp.grading.FileRecordingReporter"
 
   // debugging / developping options
 
