@@ -90,8 +90,8 @@ object SbtCourseraPlugin extends AutoPlugin {
           def withRelativeNames(fs: Seq[File]) = fs.pair(relativeTo(basedir)) map {
             case (file, name) => (file, handoutProjectName + "/" + name)
           }
-          val preprocessedFiles = withRelativeNames(files).map {
-            case (file, name) =>
+          val preprocessedFiles = withRelativeNames(files).collect {
+            case (file, name) if !files.startsWith(".") =>
               val contents = if (name.endsWith(".scala")) {
                 val source = IO.read(file)
                 val processedSource = source.replaceAll("""(?s)//\-\-\-.*?/*\+\+\+[\t\x0B\f\r]*[\n]?(.*?)\+\+\+\*/[\t\x0B\f\r]*[\n]?""", "$1")
