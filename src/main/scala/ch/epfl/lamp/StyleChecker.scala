@@ -49,26 +49,8 @@ object StyleChecker {
     scala.math.max(maxResult - penalties, 0)
   }
 
-  def assess(allSources: Seq[File]): (String, Int) = {
-    val reactive = allSources.exists { f =>
-      val path = f.getAbsolutePath
-      path.contains("quickcheck") ||
-        path.contains("nodescala") ||
-        path.contains("suggestions") ||
-        path.contains("actorbintree") ||
-        path.contains("kvstore")
-    }
-    val tweak = if (reactive) "_reactive" else ""
-
-    val configFile = new File("project/scalastyle_config" + tweak + ".xml").getAbsolutePath
-
-    val sources = allSources.filterNot { f =>
-      val path = f.getAbsolutePath
-      path.contains("demo") ||
-        path.contains("interpreter") ||
-        path.contains("fetchtweets") ||
-        path.contains("simulations")
-    }
+  def assess(sources: Seq[File], styleSheetPath: String, courseId: String): (String, Int) = {
+    val configFile = new File(styleSheetPath).getAbsolutePath
 
     val messages = new ScalastyleChecker().checkFiles(
       ScalastyleConfiguration.readFromXml(configFile),
@@ -84,7 +66,7 @@ object StyleChecker {
         "Processed " + outputResult.files + " file(s)\n" +
         "Found " + outputResult.errors + " errors\n" +
         "Found " + outputResult.warnings + " warnings\n" +
-        (if (outputResult.errors + outputResult.warnings > 0) "Consult the style guide at %s/wiki/ScalaStyleGuide".format(baseURL("progfun-005")) else "")
+        (if (outputResult.errors + outputResult.warnings > 0) "Consult the style guide at %s/wiki/ScalaStyleGuide".format(baseURL(courseId)) else "")
 
     (msg, score(outputResult))
   }

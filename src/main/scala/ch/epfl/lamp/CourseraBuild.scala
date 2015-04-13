@@ -187,4 +187,28 @@ trait CourseraBuild extends sbt.Build {
       finder.get
     }
   }
+
+  /**
+   * **********************************************************
+   * STYLE CHECKING
+   */
+  /**
+   * - depend on scalaTestSubmission so that test get executed before style checking. the transitive
+   *   dependencies also ensures that the "sources in Compile" don't have compilation errors
+   * - using `map` makes this task execute only if all its dependencies succeeded.
+   */
+  val styleCheckSubmissionSetting = styleCheckSubmission <<= (sources in Compile, scalaTestSubmission, projectDetailsMap in assignmentProject, submitProjectName in assignmentProject) map { (sourceFiles, _, projectDetails, submitProjectName) =>
+    val project = projectDetails(submitProjectName)
+    if (project.styleSheet != "") {
+      val (styleSheet, courseId) = (project.styleSheet, project.courseId)
+      val (feedback, score) = StyleChecker.assess(sourceFiles, styleSheet, courseId)
+      if (score == StyleChecker.maxResult) {
+        GradingFeedback.perfectStyle()
+      } else {
+        val gradeScore = GradingFeedback.maxStyleScore * score / StyleChecker.maxResult
+        GradingFeedback.styleProblems(feedback, gradeScore)
+      }
+    }
+  }
+
 }
