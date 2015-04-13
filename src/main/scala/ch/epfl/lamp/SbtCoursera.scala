@@ -151,21 +151,6 @@ object SbtCourseraPlugin extends AutoPlugin {
     val styleCheckSubmission = TaskKey[Unit]("styleCheckSubmission")
 
     /**
-     * - depend on scalaTestSubmission so that test get executed before style checking. the transitive
-     *   dependencies also ensures that the "sources in Compile" don't have compilation errors
-     * - using `map` makes this task execute only if all its dependencies succeeded.
-     */
-    val styleCheckSubmissionSetting = styleCheckSubmission <<= (sources in Compile, scalaTestSubmission) map { (sourceFiles, _) =>
-      val (feedback, score) = StyleChecker.assess(sourceFiles)
-      if (score == StyleChecker.maxResult) {
-        GradingFeedback.perfectStyle()
-      } else {
-        val gradeScore = GradingFeedback.maxStyleScore * score / StyleChecker.maxResult
-        GradingFeedback.styleProblems(feedback, gradeScore)
-      }
-    }
-
-    /**
      * **********************************************************
      * PROJECT DEFINITION FOR INSTRUMENTATION AGENT
      */
@@ -178,7 +163,8 @@ object SbtCourseraPlugin extends AutoPlugin {
       maxScore: Double,
       styleScoreRatio: Double,
       courseId: String = "",
-      dependencies: Seq[ModuleID] = Seq())
+      dependencies: Seq[ModuleID] = Seq(),
+      styleSheet: String = "")
 
     /**
      * Only include the test files which are defined in the package of the current project.
@@ -259,11 +245,15 @@ object SbtCourseraPlugin extends AutoPlugin {
     /**
      * depend on compile to make sure the sources pass the compiler
      */
-    val styleCheckSetting = styleCheck <<= (compile in Compile, sources in Compile, streams) map { (_, sourceFiles, s) =>
-      val logger = s.log
-      val (feedback, score) = StyleChecker.assess(sourceFiles)
-      logger.info(feedback)
-      logger.info("Style Score: " + score + " out of " + StyleChecker.maxResult)
+    val styleCheckSetting = styleCheck <<= (compile in Compile, sources in Compile, projectDetailsMap, submitProjectName, streams) map { (_, sourceFiles, projectDetails, submitProjectName, s) =>
+      val project = projectDetails(submitProjectName)
+      val (styleSheet, courseId) = (project.styleSheet, project.courseId)
+      if (styleSheet != "") {
+        val logger = s.log
+        val (feedback, score) = StyleChecker.assess(sourceFiles, styleSheet, courseId)
+        logger.info(feedback)
+        logger.info("Style Score: " + score + " out of " + StyleChecker.maxResult)
+      } else s.log.warn("Can't check style: there is no style sheet provided.")
     }
 
     /**
