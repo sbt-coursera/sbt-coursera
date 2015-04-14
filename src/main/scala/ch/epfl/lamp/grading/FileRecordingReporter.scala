@@ -14,13 +14,15 @@ class FileRecordingReporter extends Reporter {
     new File(prop)
   }
 
-  private def writeOutfile(s: String): Unit = {
+  private def record(entry: Entry) = {
     val p = new java.io.PrintWriter(outfile)
-    try p.print(s)
-    finally p.close()
+    try {
+      p.print(entry.toJson)
+      p.print("\n")
+    } finally {
+      p.close()
+    }
   }
-
-  private def record(entry: Entry) = writeOutfile(entry.toJson)
 
   def apply(event: Event): Unit = event match {
     /* We don't get a `TestStarting` for ignored tests, but we do get here
