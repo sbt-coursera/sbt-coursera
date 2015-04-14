@@ -58,9 +58,7 @@ object Report {
   final case class Test(val name: String, val weight: Int,
     var failure: Option[String])
 
-  /** Replay the event records from the file and reconstruct
-   *  a sequence of suites that they represent.
-   */
+  /** Replay the event records from the file and construct repot summary. */
   def summarize(file: File) = {
     val lines = io.Source.fromFile(file).getLines
     val entries = lines.map(Entry.fromJson).toSeq
@@ -81,14 +79,9 @@ object Report {
     Summary(suites.values.toList)
   }
 
-  /**
-   * Summary of the test report that contains test entries
-   *  grouped by their status and computes feedback and score of the submission.
-   */
   final case class Summary(suites: List[Suite]) {
     def score: Int = suites.map { _.tests.values.map { t => t.failure.fold(t.weight)(_ => 0) }.sum }.sum
     def maxScore: Int = suites.map { _.weight }.sum
-
     def feedback: String = {
       val sb = new StringBuilder
       sb.append {
