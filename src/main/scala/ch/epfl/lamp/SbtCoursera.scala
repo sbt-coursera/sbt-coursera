@@ -128,7 +128,7 @@ object SbtCourseraPlugin extends AutoPlugin {
 
     val scalaTestSubmission = TaskKey[Unit]("scalaTestSubmission")
     val scalaTestSubmissionSetting = scalaTestSubmission := {
-      val classpath = (fullClasspath in Test).value
+      val classpath = (fullClasspath in Test).value ++ (fullClasspath in Compile).value
       val resources = (copyResources in Compile).value
       val testClasses = (classDirectory in Test).value
       val agents = (scalaTestJavaAgents in Test).value

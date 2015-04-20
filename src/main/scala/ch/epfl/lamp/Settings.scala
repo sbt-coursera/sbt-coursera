@@ -20,13 +20,14 @@ object Settings {
   }
   val submissionDirName = "submission"
 
-  val testResultsFileName = "scalaTestLog.txt"
+  val testResultsFileName = "scalaTestLog"
+  val testSummarySuffix = ".summary"
   val policyFileName = "allowAllPolicy"
   val submissionJsonFileName = "submission.json"
   val submissionJarFileName = "submittedSrc.jar"
 
   // time in seconds that we give scalatest for running
-  val scalaTestTimeout = 850 // coursera has a 15 minute timeout anyhow
+  val scalaTestTimeout = 100 // coursera has a 15 minute timeout anyhow
   val individualTestTimeout = 240
 
   // default weight of each test in a GradingSuite, in case no weight is given
@@ -41,10 +42,10 @@ object Settings {
   val scalaTestIndividualTestTimeoutProperty = "scalatest.individualTestTimeout"
   val scalaTestReadableFilesProperty = "scalatest.readableFiles"
   val scalaTestDefaultWeigthProperty = "scalatest.defaultWeight"
-  val scalaTestReporter = "ch.epfl.lamp.grading.FileRecordingReporter"
+  val scalaTestReporter = "ch.epfl.lamp.grading.GradingReporter"
 
   // debugging / developping options
 
   // don't decode json and unpack the submission sources, don't upload feedback
-  val offlineMode = false
+  val offlineMode = true
 }

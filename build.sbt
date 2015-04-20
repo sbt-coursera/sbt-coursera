@@ -17,6 +17,8 @@ resolvers += "Spray Repository" at "http://repo.spray.io"
 
 resolvers += "OSSH" at "https://oss.sonatype.org/content/groups/public"
 
+libraryDependencies += "org.scala-lang.modules" %% "scala-pickling" % "0.10.0"
+
 libraryDependencies += "net.databinder" %% "dispatch-http" % "0.8.10"
 
 libraryDependencies += "org.scalastyle" %% "scalastyle" % "0.3.2"
@@ -30,8 +32,6 @@ libraryDependencies += "org.apache.commons" % "commons-lang3" % "3.1"
 
 // sbteclipse depends on scalaz 7.0.2, so we can't use 7.1.0
 libraryDependencies += "org.scalaz" %% "scalaz-core" % "7.0.2"
-
-libraryDependencies += "org.scala-lang.modules" %% "scala-pickling" % "0.10.0"
 
 addSbtPlugin("com.typesafe.sbteclipse" % "sbteclipse-plugin" % "3.0.0")
 
