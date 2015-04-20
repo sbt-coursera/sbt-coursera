@@ -142,7 +142,7 @@ object ScalaTestRunner {
       summaryProc.exitValue
     } catch {
       case e: Throwable =>
-        val msg = "Error occurred while running the test scalatest summary command\n" + e.toString
+        val msg = "Error occurred while running the test ScalaTest summary command\n" + e.toString
         logError(msg)
         summaryProc.destroy()
         throw e
@@ -151,7 +151,7 @@ object ScalaTestRunner {
       io.Source.fromFile(summaryfileStr).getLines.mkString("\n").unpickle[GradingSummary]
     } catch {
       case e: Throwable =>
-        val msg = "Error occured while decoding scalatest summary base on \n" + e.toString + "\n" + out.toString()
+        val msg = "Error occured while reading ScalaTest summary file\n" + e.toString + "\n" + out.toString()
         logError(msg)
         throw e
     }
