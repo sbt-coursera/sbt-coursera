@@ -20,7 +20,8 @@ object Settings {
   }
   val submissionDirName = "submission"
 
-  val testResultsFileName = "scalaTestLog.txt"
+  val testResultsFileName = "scalaTestLog"
+  val testSummarySuffix = ".summary"
   val policyFileName = "allowAllPolicy"
   val submissionJsonFileName = "submission.json"
   val submissionJarFileName = "submittedSrc.jar"
@@ -41,6 +42,7 @@ object Settings {
   val scalaTestIndividualTestTimeoutProperty = "scalatest.individualTestTimeout"
   val scalaTestReadableFilesProperty = "scalatest.readableFiles"
   val scalaTestDefaultWeigthProperty = "scalatest.defaultWeight"
+  val scalaTestReporter = "ch.epfl.lamp.grading.GradingReporter"
 
   // debugging / developping options
 

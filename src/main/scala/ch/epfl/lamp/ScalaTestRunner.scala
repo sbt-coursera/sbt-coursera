@@ -5,6 +5,10 @@ import Keys._
 import sys.process.{ Process => SysProc, ProcessLogger }
 import java.util.concurrent._
 import collection.mutable.ListBuffer
+import scala.pickling.Defaults._
+import scala.pickling.json._
+import grading.GradingSummary
+import Settings._
 
 object ScalaTestRunner {
 
@@ -67,19 +71,6 @@ object ScalaTestRunner {
 
   private def runPathString(file: File) = file.getAbsolutePath().replace(" ", "\\ ")
 
-  private def extractWeights(s: String, logError: String => Unit) = {
-    try {
-      val (nums, rest) = s.span(c => c != '\n')
-      val List(grade, max) = nums.split(';').toList
-      (grade.toInt, max.toInt, rest.drop(1))
-    } catch {
-      case e: Throwable =>
-        val msg = "Could not extract weight from grading feedback\n" + s
-        logError(msg)
-        throw e
-    }
-  }
-
   def runScalaTest(classpath: Classpath, testClasses: File, outfile: File,
     policyFile: File, resourceFiles: List[File], agents: List[File],
     javaSystemProperties: Traversable[(String, String)],
@@ -114,43 +105,58 @@ object ScalaTestRunner {
       "-cp" :: classpathString ::
       "org.scalatest.tools.Runner" ::
       "-R" :: testRunpath ::
-      "-C" :: "ch.epfl.lamp.grading.GradingReporter" ::
+      "-C" :: Settings.scalaTestReporter ::
       Nil)
 
     // process deadlocks in Runner.PassFailReporter.allTestsPassed on runDoneSemaphore.acquire() when
     // something is wrong, e.g. when there's an error.. So we have to run it with a timeout.
 
     val out = new LimitedStringBuffer()
-    var p: SysProc = null
+    var proc: SysProc = null
     try {
-      p = SysProc(cmd).run(ProcessLogger(out.append(_), out.append(_)))
-      forkProcess(p, Settings.scalaTestTimeout)
+      proc = SysProc(cmd).run(ProcessLogger(out.append(_), out.append(_)))
+      forkProcess(proc, Settings.scalaTestTimeout)
     } catch {
       case e: TimeoutException =>
         val msg = "Timeout when running ScalaTest\n" + out.toString()
         logError(msg)
-        p.destroy()
+        proc.destroy()
         sys.error(msg)
 
       case e: Throwable =>
         val msg = "Error occurred while running the ScalaTest command\n" + e.toString + "\n" + out.toString()
         logError(msg)
-        p.destroy()
+        proc.destroy()
         throw e
     }
+    val runLog = out.toString()
 
-    val feedbackFileContent = try {
-      io.Source.fromFile(outfileStr).mkString
+    val summaryfileStr = outfileStr + testSummarySuffix
+    val summaryCmd = ("scala" ::
+      "-cp" :: classpathString ::
+      "ch.epfl.lamp.grading.GradingSummaryRunner" ::
+      outfileStr :: summaryfileStr :: Nil)
+    var summaryProc: SysProc = null
+    try {
+      summaryProc = SysProc(summaryCmd).run()
+      summaryProc.exitValue
     } catch {
       case e: Throwable =>
-        val msg = "Error occured while reading the output file of ScalaTest\n" + e.toString + "\n" + out.toString()
+        val msg = "Error occurred while running the test ScalaTest summary command\n" + e.toString
+        logError(msg)
+        summaryProc.destroy()
+        throw e
+    }
+    val summary = try {
+      io.Source.fromFile(summaryfileStr).getLines.mkString("\n").unpickle[GradingSummary]
+    } catch {
+      case e: Throwable =>
+        val msg = "Error occured while reading ScalaTest summary file\n" + e.toString + "\n" + out.toString()
         logError(msg)
         throw e
     }
 
-    val (score, maxScore, feedback) = extractWeights(feedbackFileContent, logError)
-    val runLog = out.toString()
-    (score, maxScore, feedback, runLog)
+    (summary.score, summary.maxScore, summary.feedback, runLog)
   }
 
   def scalaTestGrade(classpath: Classpath, testClasses: File, outfile: File,

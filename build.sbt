@@ -17,6 +17,8 @@ resolvers += "Spray Repository" at "http://repo.spray.io"
 
 resolvers += "OSSH" at "https://oss.sonatype.org/content/groups/public"
 
+libraryDependencies += "org.scala-lang.modules" %% "scala-pickling" % "0.10.0"
+
 libraryDependencies += "net.databinder" %% "dispatch-http" % "0.8.10"
 
 libraryDependencies += "org.scalastyle" %% "scalastyle" % "0.3.2"
