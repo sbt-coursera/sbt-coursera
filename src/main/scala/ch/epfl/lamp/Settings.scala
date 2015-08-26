@@ -23,8 +23,6 @@ object Settings {
   val testResultsFileName = "scalaTestLog"
   val testSummarySuffix = ".summary"
   val policyFileName = "allowAllPolicy"
-  val submissionJsonFileName = "submission.json"
-  val submissionJarFileName = "submittedSrc.jar"
 
   // time in seconds that we give scalatest for running
   val scalaTestTimeout = 850 // coursera has a 15 minute timeout anyhow

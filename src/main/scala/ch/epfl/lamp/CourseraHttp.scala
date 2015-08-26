@@ -156,40 +156,6 @@ object CourseraHttp {
    * ******************************
    * DOWNLOADING SUBMISSIONS
    */
-  def readJsonFile(jsonFile: File, targetJar: File): ValidationNel[String, QueueResult] = {
-    extractJson(sbt.IO.read(jsonFile), targetJar)
-  }
-
-  def extractJson(jsonData: String, targetJar: File): ValidationNel[String, QueueResult] = {
-    import SubmitJsonProtocol._
-    for {
-      jsonSubmission <- {
-        try {
-          val parsed = JsonParser(jsonData)
-          val submission = parsed \ "submission"
-          if (submission == JsNull) {
-            ("Nothing to grade, queue is empty.").failureNel
-          } else {
-            submission.convertTo[JsonSubmission].successNel
-          }
-        } catch {
-          case e: Exception =>
-            ("Could not parse submission\n" + jsonData + "\n" + fullExceptionString(e)).failureNel
-        }
-      }
-      queueResult <- {
-        val encodedFile = jsonSubmission.submission
-        val jarContent = decodeBase64(encodedFile)
-        try {
-          sbt.IO.write(targetJar, jarContent)
-          QueueResult(jsonSubmission.api_state).successNel
-        } catch {
-          case e: IOException =>
-            ("Failed to write jar file to " + targetJar.getAbsolutePath + "\n" + e.toString).failureNel
-        }
-      }
-    } yield queueResult
-  }
 
   def unpackJar(file: File, targetDirectory: File): ValidationNel[String, Unit] = {
     try {
@@ -207,33 +173,6 @@ object CourseraHttp {
         } else {
           msg.failureNel
         }
-    }
-  }
-
-  /**
-   * ******************************
-   * SUBMITTING GRADES
-   */
-
-  def submitGrade(feedback: String, score: String, apiState: String, apiKey: String, gradeProject: ProjectDetails, logger: Option[Logger]): ValidationNel[String, Unit] = {
-    import DefaultJsonProtocol._
-    val baseReq = url(Settings.uploadFeedbackUrl(gradeProject.courseId))
-    val reqArgs = Map("api_state" -> apiState, "score" -> score, "feedback" -> feedback)
-    val withArgs = baseReq << reqArgs <:< Map("X-api-key" -> apiKey)
-    for (l <- logger) l.debug("Submit grade arguments: \n X-api-key: " + apiKey + " " + reqArgs + " ")
-    executeRequest(withArgs) { res =>
-      try {
-        for (l <- logger) l.debug("Response:" + res)
-        val js = JsonParser(res)
-        val status = (js \ "status").convertTo[String]
-        if (status == "202")
-          ().successNel
-        else
-          ("Unexpected result from submit request: " + status).failureNel
-      } catch {
-        case e: Exception =>
-          ("Failed to parse response while submitting grade\n" + res + "\n" + fullExceptionString(e)).failureNel
-      }
     }
   }
 

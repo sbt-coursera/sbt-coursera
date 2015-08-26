@@ -14,10 +14,10 @@ object GradingFeedback {
   /**
    * Converts the string to HTML - coursera displays the feedback in an html page.
    */
-  def feedbackString(uuid: String, html: Boolean = true) = {
+  def feedbackString(html: Boolean = true) = {
     val total = totalGradeMessage(totalScore) + "\n\n"
     // trim removes the newlines at the end
-    val s = (total + feedbackSummary.mkString + feedbackDetails.mkString + uniqueGradeId(uuid) + "\n\n").trim
+    val s = (total + feedbackSummary.mkString + feedbackDetails.mkString + "\n\n").trim
     if (html)
       "<pre>" + StringEscapeUtils.escapeHtml4(s) + "</pre>"
     else
@@ -204,7 +204,4 @@ object GradingFeedback {
 
   private def totalGradeMessage(score: Double) =
     """Your overall score for this assignment is %.2f out of %.2f""".format(score, vMaxTestScore + vMaxStyleScore)
-
-  // This is added because the feedback is getting overwritten by someone.
-  private def uniqueGradeId(s: String) = """Unique identifier of this grade is %s. This identifier will uniquely identify your assignment throughout the grading system.""".format(s)
 }

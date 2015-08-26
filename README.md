@@ -2,14 +2,14 @@
 
 [![Join the chat at https://gitter.im/sbt-coursera/sbt-coursera](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/sbt-coursera/sbt-coursera?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) [![Build Status](https://travis-ci.org/sbt-coursera/sbt-coursera.png?branch=master)](https://travis-ci.org/sbt-coursera/sbt-coursera)
 
-This is an SBT plugin for creating Scala and Java projects that can be automatically graded on [Corusera](https://www.coursera.org/). The plugin is meant to be used with the set of [scripts](https://github.com/sbt-coursera/cluster-management) for managing the cluster infrastructure.
+This is an SBT plugin for creating Scala and Java projects that can be automatically graded on [Coursera](https://www.coursera.org/). Starting with version 0.6, this plugin has been upgraded to run within Coursera's new on-demand platform's programming assignment infrastructure based upon Docker.
 
 ### Usage
 
 To use the `sbt-coursera` plugin you need to do two things: 
   * Add the `plugins.sbt` file with the following contents to the `<base-dir>/project` folder. The file should contain the following:
     
-        addSbtPlugin("ch.epfl.lamp" % "sbt-coursera" % "0.3")
+        addSbtPlugin("ch.epfl.lamp" % "sbt-coursera" % "0.6")
 
   * Add your custom build file to the `<base-dir>/project` by filling in the [template file](TODO).
 
@@ -41,9 +41,9 @@ In order to grade an assignment, one has to run the `submission/grade` task. But
 
 where `partIdOfGradingProject` is one of the assignment part ids used in the `projectDetailsMap` of the main `build.sbt` file. Defining the `partIdOfGradingProject` setting can also be done when running from the command line:
 
- > ``sbt `(partIdOfGradingProject in submissionProject) := "idString"` submission/grade``
+ > ``sbt 'set (partIdOfGradingProject in submissionProject) := "idString"' submission/grade``
 
-The `submission/grade` task will then unpack the source, compile it, compile the tests, run the tests, run the stylechecker, and upload the generated feedback via the coursera API.
+The `submission/grade` task will then unpack the source, compile it, compile the tests, run the tests, run the stylechecker, and output the feedback and grade to stderr.
 
 ### Settings.offlineMode
 
@@ -51,7 +51,6 @@ In `Settings.scala` there's a boolean `offlineMode` which is useful when coding 
 
 - not decode the json file and extract the source code
 - not clean the sources in the `submission` project
-- not upload feedback
 
 
 ### Creating handouts
@@ -86,6 +85,23 @@ To run the test suite with test weights (only works in branch `solutions`) while
 
 **NOTE**: all of these tasks tasks take the `currentProject` setting into account, see above.
 
+### Building docker container images for grading
+
+To build a docker container image to upload to Coursera to use for grading, be sure to have the following prerequisites installed:
+
+ - [`docker`](https://docker.com) - A popular container system for Linux.
+ - [`courseraprogramming`](https://github.com/coursera/courseraprogramming) - A toolkit to help instructional teams build grading containers
+
+To dockerize an sbt project, copy the sample docker file in `docker/Dockerfile.sample` to `Dockerfile` at the root of your project. Also copy `docker/grade.sh.template` to the root of your project. Then run: `docker build -t <your-project-name> .` to build and tag your container image (e.g. `docker build -t reactive .` to tag it as `reactive`).
+
+You can run `courseraprogramming inspect <your-project-name>` to launch an interactive terminal within the container image to poke at the file system, or run `courseraprogramming grade local <your-project-name> path/to/submission/folder` to run the grader on a sample submission. The submission folder should have a single jar inside named `submission.jar` containing the sources to grade. (You can generate this JAR by running `packageSubmission` in an student sbt project. Look for the resulting `jar` inside `target/scala-2.11` or display it by executing `show packageSubmission` in the `sbt` interactive console.)
+
+To upload the grader to coursera, execute: `courseraprogramming upload <your-project-name> <coursera-course-id> <programming-assignment-id> <part-id-of-grader>`.
+
+#### Security guarantees
+
+Note: sbt and the test runner must carefully protect the stderr output such that only grade information is output to stderr. Otherwise grading failures will result. The current test runner runs the submission code in a separate JVM and capture stdout and stderr appropriately. `scalac` and `sbt` only output to stdout through `sbt`'s streams interface, and thus leave stderr clean. Beware of an assignment that allows users to define macros, however, as that would give user submitted code control of execution within the primary JVM, allowing them to potentially manipulate stderr, and thus their grades.
+
 ---
 
 # BUILD DEFINITION
@@ -93,6 +109,3 @@ To run the test suite with test weights (only works in branch `solutions`) while
 Students will never have to touch any build files.
 
 The main `build.sbt` file defines settings for all projects.
-
-The file `submission/settings.sbt` contains settings only needed for grading. **This file contains a secret API key and should not be distributed to the students**.
-

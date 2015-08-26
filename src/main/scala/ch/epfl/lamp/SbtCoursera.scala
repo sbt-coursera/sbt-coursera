@@ -262,11 +262,6 @@ object SbtCourseraPlugin extends AutoPlugin {
      */
 
     /**
-     * The assignment uuid that is used for uniquely connecting feedback to the logs.
-     */
-    val gradingUUID = SettingKey[String]("gradingUUID")
-
-    /**
      * The assignment part id of the project to be graded. Don't hard code this setting in .sbt or .scala, this
      * setting should remain a (command-line) parameter of the `submission/grade` task, defined when invoking sbt.
      * See also feedback string in "val gradeProjectDetailsSetting".
@@ -281,88 +276,40 @@ object SbtCourseraPlugin extends AutoPlugin {
     val gradingCourseId = SettingKey[String]("gradingCourseId")
 
     /**
-     * The api key to access non-public api parts on coursera. This key is secret! It's defined in
-     * 'submission/settings.sbt', which is not part of the handout.
-     *
-     * Default value 'apiKey' to make the handout sbt project work
-     *  - In the handout, apiKey needs to be defined, otherwise the build doesn't compile
-     *  - When correcting, we define 'apiKey' in the 'submission/sectrets.sbt' file
-     *  - The value in the .sbt file will take precedence when correcting (settings in .sbt take
-     *    precedence over those in .scala)
-     */
-    val apiKey = SettingKey[String]("apiKey")
-
-    /**
-     * **********************************************************
-     * GRADING INITIALIZATION
-     */
-
-    val initGrading = TaskKey[Unit]("initGrading")
-    lazy val initGradingSetting = initGrading <<= (clean, baseDirectory, sourceDirectory) map { (_, baseDir, submissionSrcDir) =>
-      deleteFiles(submissionSrcDir, baseDir)
-      GradingFeedback.initialize()
-      RecordingLogger.clear()
-    }
-
-    def deleteFiles(submissionSrcDir: File, baseDir: File) {
-      // don't delete anything in offline mode, useful for us when hacking testing / stylechecking
-      if (!Settings.offlineMode) {
-        IO.delete(submissionSrcDir)
-        IO.delete(baseDir / Settings.submissionJarFileName)
-        IO.delete(baseDir / Settings.testResultsFileName)
-      }
-    }
-
-    /**
      * **********************************************************
      * DOWNLOADING AND EXTRACTING SUBMISSION
      */
 
     val getSubmission = TaskKey[Unit]("getSubmission")
-    val getSubmissionSetting = getSubmission <<= (initGrading, baseDirectory, scalaSource in Compile) map { (_, baseDir, scalaSrcDir) =>
-      readAndUnpackSubmission(baseDir, scalaSrcDir)
-    }
-
-    def readAndUnpackSubmission(baseDir: File, targetSourceDir: File) {
+    val getSubmissionSetting = getSubmission := {
+      GradingFeedback.initialize()
+      RecordingLogger.clear()
       try {
-        val jsonFile = baseDir / Settings.submissionJsonFileName
-        val targetJar = baseDir / Settings.submissionJarFileName
         val res = for {
-          queueResult <- {
-            if (Settings.offlineMode) {
-              println("[not unpacking from json file]")
-              QueueResult("").successNel
-            } else {
-              CourseraHttp.readJsonFile(jsonFile, targetJar)
-            }
-          }
           _ <- {
-            GradingFeedback.apiState = queueResult.apiState
-            CourseraHttp.unpackJar(targetJar, targetSourceDir)
+            GradingFeedback.apiState = ""
+            CourseraHttp.unpackJar(file("/shared/submission/submission.jar"), (scalaSource in Compile).value)
           }
-        } yield ()
+        } yield {
+          ()
+        }
 
         res match {
           case Failure(msgs) =>
             GradingFeedback.downloadUnpackFailed(msgs.list.mkString("\n"))
-          case _ =>
-            ()
+          case _ => ()
         }
       } catch {
         case e: Throwable =>
-          // generate some useful feedback in case something fails
+          sys.error(s"Error while unpacking JAR. Imcomplete upload? ${e.getMessage()}")
           GradingFeedback.downloadUnpackFailed(CourseraHttp.fullExceptionString(e))
           throw e
       }
-      if (GradingFeedback.isFailed) failDownloadUnpack()
+      if (GradingFeedback.isFailed) sys.error("Unpack failed")
     }
 
     // dependsOn makes sure that `getSubmission` is executed *before* `unmanagedSources`
     val getSubmissionHook = (unmanagedSources in Compile) <<= (unmanagedSources in Compile).dependsOn(getSubmission)
-
-    def failDownloadUnpack(): Nothing = {
-      sys.error("Download or Unpack failed")
-    }
 
     /**
      * **********************************************************

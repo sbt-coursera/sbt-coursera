@@ -1,0 +1,49 @@
+# Packages up the current directory into a docker image for grading within Coursera's
+# production programming assignment system (GrID).
+#
+# Please see https://github.com/sbt-coursera/sbt-coursera for background / details
+# about this file.
+
+FROM ubuntu:latest
+# Initial author: Brennan Saeta <saeta@coursera.org>
+MAINTAINER EPFL Team <heather.miller@epfl.ch>
+
+# Add the grading user (userid 1000 always).
+RUN useradd -m --home /grader -u 1000 -s /bin/bash grader
+
+# Add https APT method (required for httpS://dl.bintray.com)
+RUN apt-get install -y apt-transport-https
+
+# Add sbt repository and keys
+RUN echo "deb https://dl.bintray.com/sbt/debian /" >> /etc/apt/sources.list.d/sbt.list
+RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 642AC823
+
+# Install sbt and a java runtime environment (headless to avoid pulling in X11).
+RUN apt-get update
+RUN apt-get install -y openjdk-7-jre-headless sbt
+
+# Add the current directory's grader source into the container. (Note we try and
+# exclude unrelated materials.)
+ADD project /grader/project
+ADD src /grader/src
+ADD submission /grader/submission
+ADD build.sbt /grader/build.sbt
+ADD grade.sh /grader/grade.sh
+ADD allowAllPolicy /grader/allowAllPolicy
+ADD webui.sbt /grader/webui.sbt
+ADD web-ui /grader/web-ui
+
+# Chown the files properly
+RUN chown grader:grader -R /grader
+
+# Run sbt once to download & cache all necessary jars, compiles the scala
+# compiler interface for sbt, and pre-warms the incremental compiler.
+RUN su -c "cd /grader && sbt update compile test:compile" grader
+
+# Tell sbt to be offline from here-on-out as network is disabled at grade time.
+RUN mkdir -p /grader/.sbt/0.13
+RUN echo "offline := true" > /grader/.sbt/0.13/global.sbt
+RUN chown grader:grader -R /grader/.sbt
+
+# Set the entrypoint to kick off the wrapper grading script.
+ENTRYPOINT /grader/grade.sh

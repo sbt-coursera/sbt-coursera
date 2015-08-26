@@ -1,0 +1,47 @@
+#!/bin/bash
+
+################################################################################
+## This shell script wraps the sbt invocation to set the arguments up         ##
+## properly, and redirects the noisy stdout to stderr, and stderr to stdout   ##
+## so that Coursera's grading systems can pick up the grades and feedback.    ##
+##                                                                            ##
+## Important security assumption: nothing except the grade output must be     ##
+## allowed to go to stderr, especially nothing controlled by the submission.  ##
+##                                                                            ##
+## Initial Author: Brennan Saeta <saeta@coursera.org>                         ##
+## For background / further details, please see:                              ##
+##    https://github.com/sbt-coursera/sbt-coursera                            ##
+################################################################################
+
+set -e
+
+# Initialize the part id with a default value
+PART_ID=""
+
+# Parse command line parameters looking for parameter partId
+while [[ $# > 1 ]]
+do
+  key="$1"
+  case $key in
+    partId|--partId)
+      PART_ID="$2"
+      shift
+      ;;
+    *)
+      # Unknown key-value pair
+      shift
+      ;;
+  esac
+  shift
+done
+
+if [ -z $PART_ID ]; then
+  2>&1 echo "Error: no part id found."
+  exit 1 # Indicate grading error to the system.
+fi
+
+cd /grader
+
+SET_CMD="set(partIdOfGradingProject in submissionProject) := \"$PART_ID\""
+2>&1 echo Running: sbt "'$SET_CMD'" submission/grade
+sbt "'$SET_CMD'" submission/grade 3>&2 2>&1 1>&3

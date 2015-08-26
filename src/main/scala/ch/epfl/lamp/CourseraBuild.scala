@@ -8,6 +8,7 @@ import ch.epfl.lamp.SbtCourseraPlugin.autoImport._
 import com.typesafe.sbteclipse.plugin.EclipsePlugin
 import EclipsePlugin.EclipseKeys
 import scalaz.{ Success, Failure }
+import spray.json._
 
 trait CourseraBuild extends sbt.Build {
   // additional assignment settings
@@ -48,16 +49,12 @@ trait CourseraBuild extends sbt.Build {
     scalaTestJavaSysProps in Test <<= (scalaTestJavaSysProps in (assignmentProject, Test)),
 
     /** settings specific to the grading project */
-    initGradingSetting,
     // default value, don't change. see comment on `val partIdOfGradingProject`
-    gradingUUID := "",
     partIdOfGradingProject := "",
     gradingCourseId := "",
     gradeProjectDetailsSetting,
     setMaxScoreSetting,
     setMaxScoreHook,
-    // default value, don't change. see comment on `val apiKey`
-    apiKey := "",
     getSubmissionSetting,
     getSubmissionHook,
     submissionLoggerSetting,
@@ -126,35 +123,20 @@ trait CourseraBuild extends sbt.Build {
   val grade = TaskKey[Unit]("grade")
 
   // mapR: submit the grade / feedback in any case, also on failure
-  lazy val gradeSetting = grade <<= (gradingUUID, scalaTestSubmission, styleCheckSubmission, apiKey, gradeProjectDetails, streams) mapR { (uuidR, sts, scs, apiKeyR, projectDetailsR, s) =>
-    val Value(uuid) = uuidR
+  lazy val gradeSetting = grade <<= (scalaTestSubmission, styleCheckSubmission, gradeProjectDetails, streams) mapR { (sts, scs, projectDetailsR, s) =>
     val logOpt = s match {
       case Value(v) => Some(v.log)
       case _ => None
     }
-    logOpt.foreach(_.info(GradingFeedback.feedbackString(uuid, html = false)))
+    val feedback = GradingFeedback.feedbackString(html = false)
+    // Output to logs for instructor debugging purposes.
+    logOpt.foreach(_.info(feedback))
     val Value(projectDetails) = projectDetailsR
-    apiKeyR match {
-      case Value(apiKey) if (!apiKey.isEmpty) =>
-        logOpt.foreach(_.debug("Course Id for submission: " + projectDetails.courseId))
-        logOpt.foreach(_.debug("Corresponding API key: " + apiKey))
-        // if build failed early, we did not even get the api key from the submission queue
-        if (!GradingFeedback.apiState.isEmpty && !Settings.offlineMode) {
-          val scoreString = "%.2f".format(GradingFeedback.totalScore)
-          CourseraHttp.submitGrade(GradingFeedback.feedbackString(uuid), scoreString, GradingFeedback.apiState, apiKey, projectDetails, logOpt) match {
-            case Failure(msgs) =>
-              sys.error(msgs.list.mkString("\n"))
-            case _ =>
-              ()
-          }
-        } else if (Settings.offlineMode) {
-          logOpt.foreach(_.info(" \nSettings.offlineMode enabled, not uploading the feedback"))
-        } else {
-          sys.error("Could not submit feedback - apiState not initialized")
-        }
-      case _ =>
-        sys.error("Could not submit feedback - apiKey not defined: " + apiKeyR)
-    }
+    val didPass = GradingFeedback.totalScore == (GradingFeedback.maxTestScore + GradingFeedback.maxStyleScore)
+    val gradeOutputJson = JsObject(("isCorrect" -> JsBoolean(didPass)), ("feedback" -> JsString(feedback)))
+    // Output grade to stderr because stdout is polluted. Swap grade output to stdout in the wrapper script.
+    System.err.println(gradeOutputJson.compactPrint)
+    ()
   }
 
   /** The submission project takes resource files from the main (assignment) project */
