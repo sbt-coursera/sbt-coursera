@@ -4,7 +4,7 @@ name := "sbt-coursera"
 
 organization := "ch.epfl.lamp"
 
-version := "0.6"
+version := "0.7-SNAPSHOT"
 
 description := "An sbt plugin for grading course assignments on coursera."
 
