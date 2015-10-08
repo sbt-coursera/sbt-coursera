@@ -132,7 +132,7 @@ object ScalaTestRunner {
     val runLog = out.toString()
 
     val summaryfileStr = outfileStr + testSummarySuffix
-    val summaryCmd = ("scala" ::
+    val summaryCmd = ("java" ::
       "-cp" :: classpathString ::
       "ch.epfl.lamp.grading.GradingSummaryRunner" ::
       outfileStr :: summaryfileStr :: Nil)
