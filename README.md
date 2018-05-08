@@ -2,7 +2,7 @@
 
 [![Join the chat at https://gitter.im/sbt-coursera/sbt-coursera](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/sbt-coursera/sbt-coursera?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) [![Build Status](https://travis-ci.org/sbt-coursera/sbt-coursera.png?branch=master)](https://travis-ci.org/sbt-coursera/sbt-coursera)
 
-This is an SBT plugin for creating Scala and Java projects that can be automatically graded on [Corusera](https://www.coursera.org/). The plugin is meant to be used with the set of [scripts](https://github.com/sbt-coursera/cluster-management) for managing the cluster infrastructure.
+This is an SBT plugin for creating Scala and Java projects that can be automatically graded on [Coursera](https://www.coursera.org/). The plugin is meant to be used with the set of [scripts](https://github.com/sbt-coursera/cluster-management) for managing the cluster infrastructure.
 
 ### Usage
 
